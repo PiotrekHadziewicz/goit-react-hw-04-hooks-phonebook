@@ -1,107 +1,100 @@
-import { Component } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { nanoid } from 'nanoid';
 import { ContactForm } from 'components/ContactForm';
 import { ContactList } from 'components/ContactList';
 import { Filter } from 'components/Filter';
 import { saveLocalStorage, loadLocalStorage } from './localStorage';
 
-class App extends Component {
-  static defaultProps = {};
+export const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+  const [filter, setFilter] = useState('');
+  const inputRef = useRef();
+  const nameId = useRef(nanoid());
+  const numberId = useRef(nanoid());
+  const filterId = useRef(nanoid());
 
-  static propTypes = {};
-
-  state = {
-    contacts: [],
-    name: '',
-    number: '',
-    filter: '',
-  };
-
-  componentDidMount() {
+  useEffect(() => {
     const localStorageArray = loadLocalStorage('contacts');
     if (localStorageArray) {
-      this.setState({ contacts: localStorageArray });
+      setContacts(localStorageArray);
     }
-  }
+    inputRef.current.focus();
+  },[]);
 
-  componentDidUpdate() {
-    if (this.state.name === '') {
-      saveLocalStorage('contacts', this.state.contacts);
-    }
-  }
+  useEffect(() => {
+    saveLocalStorage('contacts', contacts);
+  }, [contacts]);
 
-  handleSubmit = ev => {
+  const handleSubmit = ev => {
     ev.preventDefault();
-    if (this.state.contacts.some(contact => contact.name === this.state.name)) {
-      alert(`${this.state.name} is already in contacts`);
+    if (contacts.some(contact => contact.name === name)) {
+      alert(`${name} is already in contacts`);
     } else {
-      this.setState(prevState => ({
-        contacts: [
-          ...prevState.contacts,
-          { id: nanoid(), name: this.state.name, number: this.state.number },
-        ],
-        name: '',
-        number: '',
-      }));
-    }
+      setContacts([
+        ...contacts,
+        { id: nanoid(), name: name, number: number },
+      ]);
+      setName('');
+      setNumber('');
+      };
+  };
+  
+
+  const handleSetName = ev => {
+    setName(ev.target.value);
   };
 
-  handleSetName = ev => {
-    this.setState({ name: ev.target.value });
+  const handleSetNumber = ev => {
+    setNumber(ev.target.value);
   };
 
-  handleSetNumber = ev => {
-    this.setState({ number: ev.target.value });
+  const handleSetFilter = ev => {
+    setFilter(ev.target.value);
   };
 
-  handleSetFilter = ev => {
-    this.setState({ filter: ev.target.value });
+  const deleteHandler = id => {
+    const newContacts = contacts.filter((contact) => contact.id !== id);
+    setContacts(newContacts);
   };
 
-  deleteHandler = id => {
-    const newContacts = this.state.contacts.filter((contact) => contact.id !== id);
-    this.setState({ contacts: newContacts });
-  }
-
-  render() {
-    const { contacts, name, number, filter } = this.state;
-
-    return (
-      <>
-        <h1>Phonebook</h1>
-        <form onSubmit={this.handleSubmit}>
-          <ContactForm
-            formId={nanoid()}
-            type="text"
-            inputName="Name"
-            value={name}
-            setName={this.handleSetName}
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          />
-          <ContactForm
-            formId={nanoid()}
-            type="tel"
-            inputName="Number"
-            value={number}
-            setName={this.handleSetNumber}
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-          />
-          <button type="submit">Add contact</button>
-        </form>
-        <h1>Contacts</h1>
-        <Filter
-          setName={this.handleSetFilter}
-          inputId={nanoid()}
+  return (
+    <>
+      <h1>Phonebook</h1>
+      <form onSubmit={handleSubmit}>
+        <ContactForm
+          inputRef={inputRef}
+          formId={nameId.current}
           type="text"
-          inputName="Filter"
-          value={filter}
+          inputName="Name"
+          value={name}
+          setName={handleSetName}
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
         />
-        <ContactList contacts={contacts} filter={filter} deleteHandler={this.deleteHandler }/>
-      </>
-    );
-  }
+        <ContactForm
+          formId={numberId.current}
+          type="tel"
+          inputName="Number"
+          value={number}
+          setName={handleSetNumber}
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+        />
+        <button type="submit">Add contact</button>
+      </form>
+      <h1>Contacts</h1>
+      <Filter
+        setName={handleSetFilter}
+        inputId={filterId.current}
+        type="text"
+        inputName="Filter"
+        value={filter}
+      />
+      <ContactList contacts={contacts} filter={filter} deleteHandler={deleteHandler}/>
+    </>
+  );
 }
 
 export default App;
