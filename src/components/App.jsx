@@ -15,6 +15,8 @@ export const App = () => {
   const numberId = useRef(nanoid());
   const filterId = useRef(nanoid());
 
+  localStorage.clear();
+
   useEffect(() => {
     const localStorageArray = loadLocalStorage('contacts');
     if (localStorageArray) {
